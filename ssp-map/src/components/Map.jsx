@@ -97,8 +97,16 @@ export default function Map({
   const dataCacheRef = useRef(new globalThis.Map())
   const dataPromiseRef = useRef(new globalThis.Map())
   const [ready, setReady] = useState(false)
+  const [precomputedUnavailable, setPrecomputedUnavailable] = useState(false)
+  const precomputedUnavailableRef = useRef(false)
 
-  const usePrecomputed = !search.trim() && !facilityType
+  const usePrecomputed = !search.trim() && !facilityType && !precomputedUnavailable
+
+  const disablePrecomputed = useCallback(() => {
+    if (precomputedUnavailableRef.current) return
+    precomputedUnavailableRef.current = true
+    setPrecomputedUnavailable(true)
+  }, [])
 
   useEffect(() => {
     const itemByKey = new globalThis.Map()
@@ -365,6 +373,7 @@ export default function Map({
     try {
       meta = await loadMeta()
     } catch {
+      disablePrecomputed()
       return
     }
     if (token !== syncTokenRef.current) return
@@ -391,6 +400,7 @@ export default function Map({
         bucketIds.map(bucketId => loadBucketLevelData(bucketId, level)),
       )
     } catch {
+      disablePrecomputed()
       return
     }
     if (token !== syncTokenRef.current) return
@@ -438,6 +448,7 @@ export default function Map({
     sexRestriction,
     loadMeta,
     loadBucketLevelData,
+    disablePrecomputed,
     clearPrecomputedLayers,
     renderRawPointsInBounds,
     renderPrecomputedEntries,

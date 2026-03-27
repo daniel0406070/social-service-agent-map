@@ -1,4 +1,6 @@
 export default function Sidebar({
+  mobileOpen,
+  onCloseMobile,
   totalCount, visibleCount,
   search, setSearch,
   regions, toggleRegion, ALL_REGIONS,
@@ -38,12 +40,22 @@ export default function Sidebar({
   }
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
       <div className="sidebar-header">
-        <h1>
-          <span className="icon">🗺</span>
-          사회복무요원 복무기관
-        </h1>
+        <div className="sidebar-title-row">
+          <h1>
+            <span className="icon">🗺</span>
+            사회복무요원 복무기관
+          </h1>
+          <button
+            type="button"
+            className="sidebar-mobile-close"
+            onClick={onCloseMobile}
+            aria-label="필터 닫기"
+          >
+            ✕
+          </button>
+        </div>
         <p>전국 복무기관 현황을 지도에서 확인하세요</p>
         <div className="stats-row">
           <div className="stat-badge">

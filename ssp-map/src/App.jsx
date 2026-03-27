@@ -9,6 +9,7 @@ export default function App() {
   const [allData, setAllData] = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
 
   const {
     search, setSearch,
@@ -36,6 +37,31 @@ export default function App() {
   }, [allData])
 
   const filtered = useMemo(() => filterItems(allData), [filterItems, allData])
+  const activeFilterCount = useMemo(() => {
+    let count = 0
+    if (search.trim()) count += 1
+    count += regions.length
+    count += categories.length
+    if (facilityType) count += 1
+    if (sexRestriction) count += 1
+    return count
+  }, [search, regions, categories, facilityType, sexRestriction])
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 960px)')
+    const handleChange = (event) => {
+      if (!event.matches) setIsMobileFilterOpen(false)
+    }
+
+    handleChange(mediaQuery)
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange)
+      return () => mediaQuery.removeEventListener('change', handleChange)
+    }
+
+    mediaQuery.addListener(handleChange)
+    return () => mediaQuery.removeListener(handleChange)
+  }, [])
 
   if (loading) {
     return (
@@ -49,6 +75,8 @@ export default function App() {
   return (
     <div className="app">
       <Sidebar
+        mobileOpen={isMobileFilterOpen}
+        onCloseMobile={() => setIsMobileFilterOpen(false)}
         totalCount={allData.length}
         visibleCount={filtered.length}
         search={search} setSearch={setSearch}
@@ -61,6 +89,17 @@ export default function App() {
       />
 
       <div className="map-wrap">
+        <div className="mobile-map-controls">
+          <button
+            type="button"
+            className="mobile-filter-toggle"
+            onClick={() => setIsMobileFilterOpen(prev => !prev)}
+          >
+            {isMobileFilterOpen ? '필터 닫기' : '필터 열기'}
+            {activeFilterCount > 0 && <span className="mobile-filter-count">{activeFilterCount}</span>}
+          </button>
+        </div>
+
         <Map
           items={filtered}
           allItems={allData}
@@ -83,6 +122,13 @@ export default function App() {
 
         <InfoPanel item={selected} onClose={() => setSelected(null)} />
       </div>
+
+      <button
+        type="button"
+        className={`sidebar-backdrop ${isMobileFilterOpen ? 'visible' : ''}`}
+        onClick={() => setIsMobileFilterOpen(false)}
+        aria-label="필터 패널 닫기"
+      />
     </div>
   )
 }
