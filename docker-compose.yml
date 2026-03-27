@@ -1,0 +1,32 @@
+name: ssp-map
+
+services:
+  ssp-map:
+    container_name: ssp-map
+    build:
+      context: .
+      dockerfile: ssp-map/Dockerfile
+      args:
+        APP_BASE_PATH: ${APP_BASE_PATH:-/ssp}
+    environment:
+      APP_BASE_PATH: ${APP_BASE_PATH:-/ssp}
+    restart: unless-stopped
+    networks:
+      - ssp-network
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+      TUNNEL_HOSTNAME: ${CLOUDFLARE_TUNNEL_HOSTNAME}
+      TUNNEL_URL: http://ssp-map:8080
+    restart: always
+    depends_on:
+      - ssp-map
+    networks:
+      - ssp-network
+
+networks:
+  ssp-network:
+    driver: bridge
